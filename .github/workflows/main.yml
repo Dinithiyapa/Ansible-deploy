@@ -81,3 +81,4 @@ jobs:
             # Restart Docker Compose services (use 'docker compose' without the hyphen)
             # Restart Docker Compose services
             docker-compose down && docker-compose up -d
+            
