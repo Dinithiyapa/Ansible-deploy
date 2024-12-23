@@ -1,0 +1,83 @@
+name: Build, Push Docker Images, and Update Linode Server
+
+on:
+  push:
+    branches:
+      - '**'  # Trigger the workflow on pushes to any branch
+
+jobs:
+  build-web:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build and push web image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./web
+          push: true
+          tags: yapadinithi/buzbud-web-action:${{ github.run_number }}-${{ github.run_attempt }}
+
+  build-api:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build and push API image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./api
+          push: true
+          tags: yapadinithi/buzbud-api-action:${{ github.run_number }}-${{ github.run_attempt }}
+
+  update-server:
+    runs-on: ubuntu-latest
+    name: Deploy to EC2
+    needs:
+      - build-web
+      - build-api
+    steps:
+      - name: SSH into AWS Server and update Docker Compose services
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_PRIVATE_KEY }}
+          script: |
+            # Navigate to the home directory
+            cd ~
+
+            # Clone the repository or pull latest changes if already cloned
+            if [ ! -d "github-action-Dockerfile" ]; then
+              git clone https://Dinithiyapa:${{ secrets.token }}@github.com/Dinithiyapa/github-action-Dockerfile.git
+            else
+              cd github-action-Dockerfile
+              git pull origin main  # Adjust with the branch name if necessary
+            fi
+
+            # Navigate to the repository directory
+            cd ~/github-action-Dockerfile
+
+            # Restart Docker Compose services (use 'docker compose' without the hyphen)
+            # Restart Docker Compose services
+            docker-compose down && docker-compose up -d
