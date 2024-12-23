@@ -104,7 +104,7 @@ jobs:
             git clone https://Dinithiyapa:${{ secrets.token }}@github.com/Dinithiyapa/Github_Action_Docker_Compose.git
 
             # Navigate to the repository directory
-            cd ~/neww
+            cd ~/Github_Action_Docker_Compose
 
             # Pull the latest changes to ensure the repository is up-to-date
             echo "Pulling latest changes..."
