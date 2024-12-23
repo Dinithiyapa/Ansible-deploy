@@ -1,0 +1,39 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for docker
+---
+
+- name: Check if Docker is installed
+  stat:
+    path: /usr/bin/docker
+  register: docker_installed
+
+- name: Install Docker if not installed
+  apt:
+    name: docker.io
+    state: present
+    update_cache: yes
+  when: not docker_installed.stat.exists
+
+- name: Start and enable Docker service
+  systemd:
+    name: docker
+    state: started
+    enabled: yes
+  when: not docker_installed.stat.exists
+
+- name: Check if Docker Compose is installed
+  stat:
+    path: /usr/local/bin/docker-compose
+  register: docker_compose_installed
+
+- name: Install Docker Compose if not installed
+  get_url:
+    url: "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-{{ ansible_system }}-{{ ansible_architecture }}"
+    dest: /usr/local/bin/docker-compose
+    mode: 'u+x'
+  when: not docker_compose_installed.stat.exists
+
+- name: Ensure the correct version of Docker Compose
+  command: docker-compose --version
+  when: docker_compose_installed.stat.exists

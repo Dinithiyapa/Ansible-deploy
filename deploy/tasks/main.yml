@@ -1,0 +1,34 @@
+---
+# roles/deploy/tasks/main.yml
+
+- name: Remove existing 'Ansible-deploy' directory if it exists
+  file:
+    path: "/home/{{ ansible_user }}/Ansible-deploy"
+    state: absent
+
+- name: Clone the 'Ansible-deploy' repository
+  git:
+    repo: "https://github.com/Dinithiyapa/Ansible-deploy.git"
+    dest: "/home/{{ ansible_user }}/Ansible-deploy"
+    version: main
+
+- name: Pull latest changes from 'Ansible-deploy'
+  git:
+    repo: "https://github.com/Dinithiyapa/Ansible-deploy.git"
+    dest: "/home/{{ ansible_user }}/Ansible-deploy"
+    update: yes
+    version: main
+
+- name: Restart Docker Compose services
+  command: docker-compose down || true
+  args:
+    chdir: "/home/{{ ansible_user }}/Ansible-deploy"
+  ignore_errors: yes
+
+- name: Start Docker Compose services
+  command: docker-compose up -d
+  args:
+    chdir: "/home/{{ ansible_user }}/Ansible-deploy"
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for deploy

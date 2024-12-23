@@ -1,0 +1,8 @@
+---
+# playbook.yml
+- name: Deploy to EC2
+  hosts: all
+  become: true
+  roles:
+    - docker
+    - deploy
