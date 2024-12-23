@@ -93,6 +93,11 @@ jobs:
             # Verify Docker Compose installation
             sudo docker-compose --version
 
+            # Stop and remove all Docker containers
+            echo "Stopping and removing all containers..."
+            sudo docker stop $(sudo docker ps -aq)
+            sudo docker rm $(sudo docker ps -aq)
+
             # Clone the repository or pull latest changes if already cloned
             if [ ! -d "github-action-Dockerfile" ]; then
               git clone https://Dinithiyapa:${{ secrets.token }}@github.com/Dinithiyapa/neww.git
