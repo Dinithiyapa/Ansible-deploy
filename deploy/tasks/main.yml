@@ -1,5 +1,6 @@
 ---
-# roles/deploy/tasks/main.yml
+
+# tasks file for deploy
 
 - name: Remove existing 'Ansible-deploy' directory if it exists
   file:
@@ -29,6 +30,4 @@
   command: docker-compose up -d
   args:
     chdir: "/home/{{ ansible_user }}/Ansible-deploy"
-#SPDX-License-Identifier: MIT-0
----
-# tasks file for deploy
+
