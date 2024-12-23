@@ -95,13 +95,13 @@ jobs:
             docker stop $(docker ps -aq) || true
             docker rm $(docker ps -aq) || true
 
-            # Remove the existing 'neww' directory completely
-            echo "Removing existing 'neww' directory if it exists..."
-            sudo rm -rf ~/neww
+            # Remove the existing 'Github_Action_Docker_Compose' directory completely
+            echo "Removing existing 'Github_Action_Docker_Compose' directory if it exists..."
+            sudo rm -rf ~/Github_Action_Docker_Compose
 
             # Clone the repository
             echo "Cloning the repository..."
-            git clone https://Dinithiyapa:${{ secrets.token }}@github.com/Dinithiyapa/neww.git
+            git clone https://Dinithiyapa:${{ secrets.token }}@github.com/Dinithiyapa/Github_Action_Docker_Compose.git
 
             # Navigate to the repository directory
             cd ~/neww
