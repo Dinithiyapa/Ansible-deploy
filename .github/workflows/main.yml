@@ -1,108 +1,40 @@
-name: Build, Push Docker Images, and Update EC2 Server
+name: Deploy Docker Application to EC2
 
 on:
   push:
     branches:
-      - '**'  # Trigger the workflow on pushes to any branch
+      - main
 
 jobs:
-  build-web:
+  deploy:
     runs-on: ubuntu-latest
+    
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v2
 
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+    - name: Set up SSH
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USERNAME }}
+        key: ${{ secrets.EC2_PRIVATE_KEY }}
+        port: 22
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+    - name: Download and install Docker Compose
+      run: |
+        sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+        sudo chmod +x /usr/local/bin/docker-compose
+        docker-compose --version
 
-      - name: Build and push web image
-        uses: docker/build-push-action@v4
-        with:
-          context: ./web
-          push: true
-          tags: yapadinithi/buzbud-web-action:${{ github.run_number }}-${{ github.run_attempt }}
-
-  build-api:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      - name: Build and push API image
-        uses: docker/build-push-action@v4
-        with:
-          context: ./api
-          push: true
-          tags: yapadinithi/buzbud-api-action:${{ github.run_number }}-${{ github.run_attempt }}
-
-  update-server:
-    runs-on: ubuntu-latest
-    name: Deploy to EC2
-    needs:
-      - build-web
-      - build-api
-    steps:
-      - name: SSH into AWS Server and update Docker Compose services
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_PRIVATE_KEY }}
-          script: |
-            # Navigate to the home directory
-            cd ~
-
-            # Install Docker if not installed
-            if ! command -v docker &> /dev/null; then
-                echo "Docker not found, installing..."
-                sudo apt-get update
-                sudo apt-get install -y docker.io
-                sudo systemctl start docker
-                sudo systemctl enable docker
-            else
-                echo "Docker is already installed"
-            fi
-
-            # Verify Docker is running
-            sudo systemctl status docker
-
-            # Install Docker Compose if not installed
-            if ! command -v docker-compose &> /dev/null; then
-                echo "Docker Compose not found, installing..."
-                sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-                sudo chmod +x /usr/local/bin/docker-compose
-            else
-                echo "Docker Compose is already installed"
-            fi
-
-            # Verify Docker Compose installation
-            docker-compose --version
-
-            # Clone the repository or pull latest changes if already cloned
-            if [ ! -d "github-action-Dockerfile" ]; then
-              git clone https://Dinithiyapa:${{ secrets.token }}@github.com/Dinithiyapa/github-action-Dockerfile.git
-            else
-              cd github-action-Dockerfile
-              git pull origin main  # Adjust with the branch name if necessary
-            fi
-
-            # Navigate to the repository directory
-            cd ~/github-action-Dockerfile
-
-            # Restart Docker Compose services
-            docker-compose down && docker-compose up -d
+    - name: Deploy Docker application
+      run: |
+        # Pull latest changes
+        git pull origin main
+        
+        # Run docker-compose commands with sudo if necessary
+        sudo docker-compose -f docker-compose.yml up -d --build
+        
+    - name: Verify deployment
+      run: |
+        sudo docker ps
