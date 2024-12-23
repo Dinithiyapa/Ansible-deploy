@@ -78,9 +78,6 @@ jobs:
                 echo "Docker is already installed"
             fi
 
-            # Verify Docker is running
-            sudo systemctl status docker
-
             # Install Docker Compose if not installed
             if ! command -v docker-compose &> /dev/null; then
                 echo "Docker Compose not found, installing..."
@@ -91,18 +88,16 @@ jobs:
             fi
 
             # Verify Docker Compose installation
-            sudo docker-compose --version
+            docker-compose --version
 
             # Stop and remove all Docker containers
             echo "Stopping and removing all containers..."
-            sudo docker stop $(sudo docker ps -aq) || true
-            sudo docker rm $(sudo docker ps -aq) || true
+            docker stop $(docker ps -aq) || true
+            docker rm $(docker ps -aq) || true
 
-            # Remove the existing 'neww' directory if it exists
-            if [ -d "~/neww" ]; then
-                echo "Removing existing 'neww' directory..."
-                rm -rf ~/neww
-            fi
+            # Remove the existing 'neww' directory completely
+            echo "Removing existing 'neww' directory if it exists..."
+            rm -rf ~/neww
 
             # Clone the repository
             echo "Cloning the repository..."
@@ -110,6 +105,11 @@ jobs:
 
             # Navigate to the repository directory
             cd ~/neww
+
+            # Pull the latest changes to ensure the repository is up-to-date
+            echo "Pulling latest changes..."
+            git reset --hard
+            git pull origin main
 
             # Restart Docker Compose services
             echo "Restarting Docker Compose services..."
