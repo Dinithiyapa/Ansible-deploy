@@ -95,7 +95,7 @@ jobs:
 
             # Clone the repository or pull latest changes if already cloned
             if [ ! -d "github-action-Dockerfile" ]; then
-              git clone https://Dinithiyapa:${{ secrets.token }}@github.com/Dinithiyapa/github-action-Dockerfile.git
+              git clone https://Dinithiyapa:${{ secrets.token }}@github.com/Dinithiyapa/neww.git
             else
               cd github-action-Dockerfile
               git pull origin main  # Adjust with the branch name if necessary
