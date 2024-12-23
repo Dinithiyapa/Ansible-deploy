@@ -97,12 +97,12 @@ jobs:
             if [ ! -d "github-action-Dockerfile" ]; then
               git clone https://Dinithiyapa:${{ secrets.token }}@github.com/Dinithiyapa/neww.git
             else
-              cd github-action-Dockerfile
+              cd neww
               git pull origin main  # Adjust with the branch name if necessary
             fi
 
             # Navigate to the repository directory
-            cd ~/github-action-Dockerfile
+            cd ~/neww
 
             # Restart Docker Compose services
             docker-compose down &&  docker-compose up -d
