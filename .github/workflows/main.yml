@@ -97,7 +97,7 @@ jobs:
 
             # Remove the existing 'neww' directory completely
             echo "Removing existing 'neww' directory if it exists..."
-            rm -rf ~/neww
+            sudo rm -rf ~/neww
 
             # Clone the repository
             echo "Cloning the repository..."
