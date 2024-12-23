@@ -95,19 +95,23 @@ jobs:
 
             # Stop and remove all Docker containers
             echo "Stopping and removing all containers..."
-            sudo docker stop $(sudo docker ps -aq)
-            sudo docker rm $(sudo docker ps -aq)
+            sudo docker stop $(sudo docker ps -aq) || true
+            sudo docker rm $(sudo docker ps -aq) || true
 
-            # Clone the repository or pull latest changes if already cloned
-            if [ ! -d "github-action-Dockerfile" ]; then
-              git clone https://Dinithiyapa:${{ secrets.token }}@github.com/Dinithiyapa/neww.git
-            else
-              cd neww
-              git pull origin main  # Adjust with the branch name if necessary
+            # Remove the existing 'neww' directory if it exists
+            if [ -d "~/neww" ]; then
+                echo "Removing existing 'neww' directory..."
+                rm -rf ~/neww
             fi
+
+            # Clone the repository
+            echo "Cloning the repository..."
+            git clone https://Dinithiyapa:${{ secrets.token }}@github.com/Dinithiyapa/neww.git
 
             # Navigate to the repository directory
             cd ~/neww
 
             # Restart Docker Compose services
-            docker-compose down &&  docker-compose up -d
+            echo "Restarting Docker Compose services..."
+            docker-compose down || true
+            docker-compose up -d
