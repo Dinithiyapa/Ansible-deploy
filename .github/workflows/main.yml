@@ -1,9 +1,13 @@
-name: Build, Push Docker Images, and Update EC2 Servers
+name: Build, Push Docker Images, and Deploy with Ansible
 
 on:
   push:
     branches:
       - '**'  # Trigger the workflow on pushes to any branch
+  pull_request:
+    branches:
+      - main
+    types: [closed]
 
 jobs:
   build-web:
@@ -50,26 +54,31 @@ jobs:
           push: true
           tags: yapadinithi/buzbud-api-action:${{ github.run_number }}-${{ github.run_attempt }}
 
-  update-servers:
+ 
+
+  deploy:
     runs-on: ubuntu-latest
-    name: Deploy to EC2 instances using Ansible
     needs:
       - build-web
       - build-api
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Set up SSH for EC2 instances
+      - name: Set up SSH
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY_1 }}" > ~/.ssh/key1.pem
-          chmod 400 ~/.ssh/key1.pem
-          echo "${{ secrets.SSH_PRIVATE_KEY_2 }}" > ~/.ssh/key2.pem
-          chmod 400 ~/.ssh/key2.pem
-          ssh-keyscan -H ${{ secrets.EC2_HOST_1 }} >> ~/.ssh/known_hosts
-          ssh-keyscan -H ${{ secrets.EC2_HOST_2 }} >> ~/.ssh/known_hosts
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > private_key.pem
+          chmod 600 private_key.pem
 
-      - name: Run Ansible playbook to deploy to EC2 instances
+      - name: Install Ansible
+        shell: bash
+        run: |
+          sudo apt update
+          sudo apt install -y ansible
+
+      - name: Run Ansible Playbook
+        env:
+          ANSIBLE_USER: ${{ secrets.ANSIBLE_USER }}
+          ANSIBLE_HOST_KEY_CHECKING: False
         run: |
           ansible-playbook -i inventory.ini deploy.yml
