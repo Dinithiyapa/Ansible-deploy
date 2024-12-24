@@ -1,4 +1,4 @@
-name: Build, Push Docker Images, and Update EC2 Server
+name: Build, Push Docker Images, and Update EC2 Servers
 
 on:
   push:
@@ -50,9 +50,9 @@ jobs:
           push: true
           tags: yapadinithi/buzbud-api-action:${{ github.run_number }}-${{ github.run_attempt }}
 
-  update-server:
+  update-servers:
     runs-on: ubuntu-latest
-    name: Deploy to EC2 using Ansible
+    name: Deploy to EC2 instances using Ansible
     needs:
       - build-web
       - build-api
@@ -60,22 +60,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up SSH for EC2
-        uses: webfactory/ssh-agent@v0.5.3
-        with:
-          ssh-private-key: ${{ secrets.EC2_PRIVATE_KEY }}  # Add private SSH key as GitHub secret
-
-      - name: Add EC2 Hosts to known_hosts
+      - name: Set up SSH for EC2 instances
         run: |
           mkdir -p ~/.ssh
-          ssh-keyscan -H 51.20.91.180 >> ~/.ssh/known_hosts  # EC2 Instance 1 IP
-          ssh-keyscan -H 51.20.127.30 >> ~/.ssh/known_hosts  # EC2 Instance 2 IP
+          echo "${{ secrets.SSH_PRIVATE_KEY_1 }}" > ~/.ssh/key1.pem
+          chmod 400 ~/.ssh/key1.pem
+          echo "${{ secrets.SSH_PRIVATE_KEY_2 }}" > ~/.ssh/key2.pem
+          chmod 400 ~/.ssh/key2.pem
+          ssh-keyscan -H ${{ secrets.EC2_HOST_1 }} >> ~/.ssh/known_hosts
+          ssh-keyscan -H ${{ secrets.EC2_HOST_2 }} >> ~/.ssh/known_hosts
 
-      - name: Set up Ansible
-        run: |
-          sudo apt update
-          sudo apt install -y ansible
-
-      - name: Run Ansible playbook to deploy
+      - name: Run Ansible playbook to deploy to EC2 instances
         run: |
           ansible-playbook -i inventory.ini deploy.yml
